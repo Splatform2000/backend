@@ -50,45 +50,63 @@ route.post("/create", async (req, res) => {
 });
 
 //edit
-route.put("/update/:id", (req, res) => {
+// route.put("/update/:id", (req, res) => {
+//   if (!req.params.id) {
+//     return res.status(400).send("Missing URL parameter: username");
+//   }
+//   NextkinModel.findOneAndUpdate(
+//     {
+//       _id: req.params.id,
+//     },
+//     req.body,
+//     {
+//       new: true,
+//     }
+//   )
+//     .then((doc) => {
+//       console.log(doc);
+//       if (!doc) {
+//         return res.json({ success: false, error: "doex not exists" });
+//       }
+//       return res.json({ success: true, doc });
+//     })
+//     .catch((err) => {
+//       res.json({ success: false, message: err });
+//     });
+// });
+
+route.put("/update/:id", async (req, res) => {
   if (!req.params.id) {
-    return res.status(400).send("Missing URL parameter: username");
+    return res.status(400).send("Missing URL parameter: id");
   }
-  NextkinModel.findOneAndUpdate(
-    {
-      _id: req.params.id,
-    },
-    req.body,
-    {
-      new: true,
+  try {
+    const doc = await NextkinModel.findOneAndUpdate({ _id: req.params.id }, req.body, { new: true });
+    if (!doc) {
+      return res.json({ success: false, error: "Document does not exist" });
     }
-  )
-    .then((doc) => {
-      console.log(doc);
-      if (!doc) {
-        return res.json({ success: false, error: "doex not exists" });
-      }
-      return res.json({ success: true, doc });
-    })
-    .catch((err) => {
-      res.json({ success: false, message: err });
-    });
+    res.json({ success: true, doc });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
+
 
 //delete
 route.delete("/delete/:id", (req, res) => {
   if (!req.params.id) {
-    return res.status(400).send("Missing URL parameter: username");
+    return res.status(400).send("Missing URL parameter: id");
   }
-  NextkinModel.findOneAndRemove({
-    _id: req.params.id,
-  })
+  NextkinModel.findOneAndRemove({ _id: req.params.id })
     .then((doc) => {
-      res.json(doc);
+      if (!doc) {
+        return res.status(404).json({ success: false, message: "Document not found" });
+      }
+      res.json({ success: true, message: "Document deleted", doc });
     })
     .catch((err) => {
-      res.status(500).json(err);
+      res.status(500).json({ success: false, message: err.message });
     });
 });
+
 
 module.exports = route;
